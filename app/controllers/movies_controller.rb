@@ -7,19 +7,41 @@ class MoviesController < ApplicationController
   end
 
   def index
-     sort = params[:sort]
+    sort = params[:sort]	
+    ratings  = params[:ratings]
+     
+    @all_ratings = Movie.new.ratings   
+    
+    if ratings
+	session[:ratings] = ratings
+    end
+    session_ratings = session[:ratings]
+    @ratings = Hash.new
+    @all_ratings.each do |rating|
+      if session_ratings
+	if session_ratings.has_key? rating
+          @ratings[rating]= true
+        else
+          @ratings[rating] = false
+        end
+	else
+	  @ratings[rating]= true
+      end
+    end
+    
      if sort
 	     if sort == "release_date"
-		@movies = Movie.order(sort).reverse_order.all
+		@movies = Movie.order(sort).find_all_by_rating(@ratings.select {|k,v| v == true}.keys)
 		@release_date = "hilite"
 	     end
 	     if sort == "title"
-	     	@movies = Movie.order(sort).all
+		@movies = Movie.order(sort).find_all_by_rating(@ratings.select {|k,v| v == true}.keys)
 		@title = "hilite"
 	     end
      else
-      	@movies = Movie.all
+		@movies = Movie.find_all_by_rating(@ratings.select {|k,v| v == true}.keys)
      end
+     
   end
 
   def new
