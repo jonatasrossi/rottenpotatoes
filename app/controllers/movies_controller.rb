@@ -7,15 +7,23 @@ class MoviesController < ApplicationController
   end
 
   def index
-    sort = params[:sort]	
-    ratings  = params[:ratings]
-     
     @all_ratings = Movie.new.ratings   
-    
-    if ratings
-	session[:ratings] = ratings
+  
+    if params[:ratings]
+	session[:ratings] = params[:ratings]
     end
+    if params[:sort]
+    	session[:sort] = params[:sort]
+    end
+    
+    
+    session_sort = session[:sort]
     session_ratings = session[:ratings]
+    
+    if params.select {|k,v| k == "ratings" or k == "sort"} != session.select {|k,v| k == "ratings" or k == "sort" and v != nil}
+	redirect_to movies_path(:sort => session_sort, :ratings => session_ratings)
+    end
+    
     @ratings = Hash.new
     @all_ratings.each do |rating|
       if session_ratings
@@ -29,13 +37,13 @@ class MoviesController < ApplicationController
       end
     end
     
-     if sort
-	     if sort == "release_date"
-		@movies = Movie.order(sort).find_all_by_rating(@ratings.select {|k,v| v == true}.keys)
+     if session_sort
+	     if session_sort == "release_date"
+		@movies = Movie.order(session_sort).find_all_by_rating(@ratings.select {|k,v| v == true}.keys)
 		@release_date = "hilite"
 	     end
-	     if sort == "title"
-		@movies = Movie.order(sort).find_all_by_rating(@ratings.select {|k,v| v == true}.keys)
+	     if session_sort == "title"
+		@movies = Movie.order(session_sort).find_all_by_rating(@ratings.select {|k,v| v == true}.keys)
 		@title = "hilite"
 	     end
      else
